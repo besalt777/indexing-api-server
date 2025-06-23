@@ -1,5 +1,10 @@
 {
+  "name": "indexing-api-server",
+  "version": "1.0.0",
   "type": "module",
+  "description": "A simple server using the Google Indexing API",
+  "author": "김성헌 <besalt777@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.6.7",
     "jsonwebtoken": "^9.0.2"
