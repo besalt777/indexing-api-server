@@ -1,3 +1,4 @@
+// 경로: /api/submit.js
 import { google } from 'googleapis';
 
 export default async function handler(req, res) {
@@ -5,32 +6,39 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { url, type } = req.body;
-
-  if (!url || !type) {
-    return res.status(400).json({ message: 'Missing url or type' });
-  }
-
   try {
-    const auth = new google.auth.JWT({
-      email: process.env.SERVICE_ACCOUNT_EMAIL,
-      key: process.env.SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    const { url, type } = req.body;
+
+    if (!url || !type) {
+      return res.status(400).json({ message: 'Missing url or type' });
+    }
+
+    const key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+
+    const jwtClient = new google.auth.JWT({
+      email: key.client_email,
+      key: key.private_key,
       scopes: ['https://www.googleapis.com/auth/indexing'],
     });
 
-    const indexing = google.indexing({ version: 'v3', auth });
+    await jwtClient.authorize();
+
+    const indexing = google.indexing({
+      version: 'v3',
+      auth: jwtClient,
+    });
 
     const response = await indexing.urlNotifications.publish({
       requestBody: {
-        url: url,
-        type: type,
+        url,
+        type,
       },
     });
 
-    return res.status(200).json({ message: 'Success', response: response.data });
+    res.status(200).json({ message: 'Indexed!', data: response.data });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Error', error: error.message });
+    res.status(500).json({ message: 'Error', error: error.message });
   }
 }
 
