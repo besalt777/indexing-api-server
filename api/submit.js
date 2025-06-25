@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Missing url or type' });
     }
 
-    const key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    const key = JSON.parse(process.env.YOUR_SERVICE_ACCOUNT_KEY);
 
     const jwtClient = new google.auth.JWT({
       email: key.client_email,
