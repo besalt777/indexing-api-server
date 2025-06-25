@@ -37,8 +37,13 @@ export default async function handler(req, res) {
 
     res.status(200).json({ message: 'Indexed!', data: response.data });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error', error: error.message });
+  console.error('��� INTERNAL ERROR:', error);  // 콘솔에 자세히 찍힘
+  res.status(500).json({
+    message: 'Internal Server Error',
+    error: error.message,     // 간략한 에러 메시지
+    stack: error.stack,       // 어떤 줄에서 에러났는지 추적 가능
+    raw: error                // 전체 에러 객체 (예: Google API 응답)
+  });
   }
 }
 
