@@ -3,11 +3,17 @@
   "version": "1.0.0",
   "type": "module",
   "description": "A simple server using the Google Indexing API",
-  "author": "김성헌 <besalt777@gmail.com>",
+  "author": "besalt777<besalt777@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.7",
     "googleapis": "^150.0.1",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "next": "^15.3.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+"dev": "next dev",
+  "build": "next build",
+  "start": "next start"
   }
 }
