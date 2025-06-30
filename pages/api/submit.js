@@ -1,4 +1,3 @@
-// pages/api/submit.js
 import { google } from 'googleapis';
 
 export default async function handler(req, res) {
@@ -8,7 +7,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    // ��� 디버깅 로그: 환경 변수 확인
+    const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    console.log('[DEBUG] Raw GOOGLE_SERVICE_ACCOUNT_KEY:', rawKey?.slice(0, 100) + '...');
+
+    const serviceAccount = JSON.parse(rawKey);
+
+    // ��� 디버깅 로그: private_key 내용 확인
+    console.log('[DEBUG] Parsed private_key:', serviceAccount.private_key?.slice(0, 50) + '...');
 
     const jwtClient = new google.auth.JWT(
       serviceAccount.client_email,
@@ -30,7 +36,7 @@ export default async function handler(req, res) {
 
     res.status(200).json(response.data);
   } catch (error) {
-    console.error('Error submitting to Google Indexing API:', error);
+    console.error('��� Error submitting to Google Indexing API:', error);
     res.status(500).json({
       error: 'Indexing failed',
       details: error.message,
