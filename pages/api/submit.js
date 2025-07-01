@@ -1,3 +1,5 @@
+import jwt from "jsonwebtoken";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -9,13 +11,13 @@ export default async function handler(req, res) {
   }
 
   const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}");
-  const jwt = await getJWT(serviceAccount);
+  const token = await getJWT(serviceAccount);
 
   const response = await fetch("https://indexing.googleapis.com/v3/urlNotifications:publish", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       url,
@@ -27,7 +29,6 @@ export default async function handler(req, res) {
   return res.status(200).json(result);
 }
 
-// 아래는 JWT 생성 함수
 async function getJWT(serviceAccount) {
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 3600;
@@ -40,44 +41,17 @@ async function getJWT(serviceAccount) {
     exp,
   };
 
-  const base64UrlEncode = (obj) =>
-    Buffer.from(JSON.stringify(obj))
-      .toString("base64")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
-  const encodedHeader = base64UrlEncode({ alg: "RS256", typ: "JWT" });
-  const encodedPayload = base64UrlEncode(payload);
-  const toSign = `${encodedHeader}.${encodedPayload}`;
-
-  const crypto = await import("crypto");
-const { createPrivateKey, createSign } = await import("crypto");
-
-const sign = createSign("RSA-SHA256");
-sign.update(toSign);
-sign.end(); // ← 매우 중요
-
-const privateKey = createPrivateKey({
-  key: serviceAccount.private_key,
-  format: "pem",
-  type: "pkcs8", // PKCS#8 명시
-});
-
-const signature = sign.sign(privateKey).toString("base64")
-  .replace(/\+/g, "-")
-  .replace(/\//g, "_")
-  .replace(/=+$/, "");
-
-
-  const jwt = `${toSign}.${signature}`;
+  const token = jwt.sign(payload, serviceAccount.private_key, {
+    algorithm: "RS256",
+    header: { alg: "RS256", typ: "JWT" },
+  });
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${token}`,
   });
 
   const data = await res.json();
