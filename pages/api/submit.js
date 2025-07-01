@@ -5,12 +5,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}";
+  const serviceAccount = JSON.parse(raw);
+
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+  }
+
   const { url } = req.body;
   if (!url) {
     return res.status(400).json({ error: "Missing URL" });
   }
 
-  const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}");
   const token = await getJWT(serviceAccount);
 
   const response = await fetch("https://indexing.googleapis.com/v3/urlNotifications:publish", {
