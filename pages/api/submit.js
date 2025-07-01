@@ -1,3 +1,4 @@
+// pages/api/submit.js
 import { google } from 'googleapis';
 
 export default async function handler(req, res) {
@@ -7,14 +8,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ��� 디버깅 로그: 환경 변수 확인
-    const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-    console.log('[DEBUG] Raw GOOGLE_SERVICE_ACCOUNT_KEY:', rawKey?.slice(0, 100) + '...');
+    console.log('✅ SUBMIT 호출됨');
 
-    const serviceAccount = JSON.parse(rawKey);
-
-    // ��� 디버깅 로그: private_key 내용 확인
-    console.log('[DEBUG] Parsed private_key:', serviceAccount.private_key?.slice(0, 50) + '...');
+    const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    console.log('✅ 서비스 계정 로드됨');
 
     const jwtClient = new google.auth.JWT(
       serviceAccount.client_email,
@@ -24,8 +21,12 @@ export default async function handler(req, res) {
     );
 
     await jwtClient.authorize();
+    console.log('✅ 인증 성공');
 
-    const indexing = google.indexing({ version: 'v3', auth: jwtClient });
+    const indexing = google.indexing({
+      version: 'v3',
+      auth: jwtClient
+    });
 
     const response = await indexing.urlNotifications.publish({
       requestBody: {
@@ -34,13 +35,14 @@ export default async function handler(req, res) {
       },
     });
 
+    console.log('✅ 색인 요청 완료', response.data);
+
     res.status(200).json(response.data);
   } catch (error) {
-    console.error('��� Error submitting to Google Indexing API:', error);
+    console.error('❌ Google Indexing API 전송 오류:', error);
     res.status(500).json({
       error: 'Indexing failed',
       details: error.message,
     });
   }
 }
-
