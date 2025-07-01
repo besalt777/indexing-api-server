@@ -1,4 +1,8 @@
 export default async function handler(req, res) {
+  console.log("Incoming method:", req.method);
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -34,8 +38,8 @@ async function getJWT(serviceAccount) {
 
   const payload = {
     iss: serviceAccount.client_email,
-    aud: "https://oauth2.googleapis.com/token",
     scope: "https://www.googleapis.com/auth/indexing",
+    aud: "https://oauth2.googleapis.com/token",
     iat,
     exp,
   };
@@ -59,11 +63,10 @@ async function getJWT(serviceAccount) {
     .replace(/=+$/, "");
 
   const jwt = `${toSign}.${signature}`;
+
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
 
