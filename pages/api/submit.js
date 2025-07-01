@@ -1,14 +1,9 @@
 export default async function handler(req, res) {
-  console.log("Incoming method:", req.method);
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { url } = req.body;
-
   if (!url) {
     return res.status(400).json({ error: "Missing URL" });
   }
@@ -20,18 +15,19 @@ export default async function handler(req, res) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt}`,
+      Authorization: `Bearer ${jwt}`,
     },
     body: JSON.stringify({
-      url: url,
+      url,
       type: "URL_UPDATED",
     }),
   });
 
   const result = await response.json();
-  res.status(200).json(result);
+  return res.status(200).json(result);
 }
 
+// 아래는 JWT 생성 함수
 async function getJWT(serviceAccount) {
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 3600;
@@ -44,11 +40,12 @@ async function getJWT(serviceAccount) {
     exp,
   };
 
-  const base64UrlEncode = (obj) => Buffer.from(JSON.stringify(obj))
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  const base64UrlEncode = (obj) =>
+    Buffer.from(JSON.stringify(obj))
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
 
   const encodedHeader = base64UrlEncode({ alg: "RS256", typ: "JWT" });
   const encodedPayload = base64UrlEncode(payload);
@@ -66,7 +63,9 @@ async function getJWT(serviceAccount) {
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
 
