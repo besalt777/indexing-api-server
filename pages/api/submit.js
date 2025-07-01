@@ -52,12 +52,23 @@ async function getJWT(serviceAccount) {
   const toSign = `${encodedHeader}.${encodedPayload}`;
 
   const crypto = await import("crypto");
-  const sign = crypto.createSign("RSA-SHA256");
-  sign.update(toSign);
-  const signature = sign.sign(serviceAccount.private_key, "base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+const { createPrivateKey, createSign } = await import("crypto");
+
+const sign = createSign("RSA-SHA256");
+sign.update(toSign);
+sign.end(); // ← 매우 중요
+
+const privateKey = createPrivateKey({
+  key: serviceAccount.private_key,
+  format: "pem",
+  type: "pkcs8", // PKCS#8 명시
+});
+
+const signature = sign.sign(privateKey).toString("base64")
+  .replace(/\+/g, "-")
+  .replace(/\//g, "_")
+  .replace(/=+$/, "");
+
 
   const jwt = `${toSign}.${signature}`;
 
