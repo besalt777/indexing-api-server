@@ -1,3 +1,4 @@
+
 import jwt from "jsonwebtoken";
 
 export default async function handler(req, res) {
@@ -9,20 +10,19 @@ export default async function handler(req, res) {
   const serviceAccount = JSON.parse(raw);
 
   if (serviceAccount.private_key) {
-    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\n/g, '\n');
   }
-// ✅ 여기 아래에 삽입하세요
-console.log("��� 사용 중인 서비스 계정:", serviceAccount.client_email);
+
+  // 디버깅용 로그 추가
+  console.log("🔐 사용 중인 서비스 계정:", serviceAccount.client_email);
 
   const { url } = req.body;
   if (!url) {
     return res.status(400).json({ error: "Missing URL" });
   }
 
-
-// ✅ 여기도 삽입하세요 (요청한 URL 확인)
-console.log("��� 요청한 URL:", url);
+  // 디버깅용 로그 추가
+  console.log("📡 요청한 URL:", url);
 
   const token = await getJWT(serviceAccount);
 
