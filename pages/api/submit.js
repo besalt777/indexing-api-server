@@ -10,12 +10,19 @@ export default async function handler(req, res) {
 
   if (serviceAccount.private_key) {
     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+
   }
+// ✅ 여기 아래에 삽입하세요
+console.log("��� 사용 중인 서비스 계정:", serviceAccount.client_email);
 
   const { url } = req.body;
   if (!url) {
     return res.status(400).json({ error: "Missing URL" });
   }
+
+
+// ✅ 여기도 삽입하세요 (요청한 URL 확인)
+console.log("��� 요청한 URL:", url);
 
   const token = await getJWT(serviceAccount);
 
